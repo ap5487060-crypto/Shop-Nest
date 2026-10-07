@@ -1,0 +1,6 @@
+{
+  "name": "ShopNest - Discover Trending Fashion & Deals",
+  "description": "Modern, premium online shopping discovery and affiliate platform for Women's Fashion, Kurtis, ethnic wear, lifestyle, and trending deals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

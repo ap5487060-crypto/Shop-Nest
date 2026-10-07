@@ -1,0 +1,132 @@
+import { Product, Category, Banner } from '../types';
+
+export const INITIAL_CATEGORIES: Category[] = [
+  {
+    id: 'womens-fashion',
+    name: "Women's Fashion",
+    slug: 'womens-fashion',
+    description: "Trending ethnic wear, daily kurtis, designer sets, and stylish western outfits.",
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80',
+    order: 1,
+    is_active: true,
+    subcategories: [
+      { id: 'kurtis', name: 'Kurtis', slug: 'kurtis', description: 'Straight, A-line & flared daily & festive kurtis' },
+      { id: 'kurti-sets', name: 'Kurti Sets', slug: 'kurti-sets', description: 'Kurta with pant and dupatta sets' },
+      { id: 'dresses', name: 'Dresses', slug: 'dresses', description: 'Floral maxis, western dresses & gowns' },
+      { id: 'sarees', name: 'Sarees', slug: 'sarees', description: 'Organza, Georgette & Banarasi silks' },
+      { id: 'suits', name: 'Ethnic Suits', slug: 'suits', description: 'Anarkali, Nayra cut & Punjabi suits' },
+      { id: 'tops', name: 'Tops & Tunics', slug: 'tops', description: 'Casual tops, shirts and short kurtis' },
+      { id: 'bottom-wear', name: 'Bottom Wear', slug: 'bottom-wear', description: 'Palazzos, leggings, pants and skirts' },
+      { id: 'co-ord-sets', name: 'Co-ord Sets', slug: 'co-ord-sets', description: 'Modern ethnic and western two-piece sets' },
+    ],
+  },
+  {
+    id: 'jewellery-accessories',
+    name: 'Jewellery & Accessories',
+    slug: 'jewellery-accessories',
+    description: 'Oxidised jhumkas, kundan chokers, bangles, and everyday fashion jewelry.',
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80',
+    order: 2,
+    is_active: true,
+    subcategories: [
+      { id: 'earrings', name: 'Earrings & Jhumkas', slug: 'earrings' },
+      { id: 'necklaces', name: 'Necklaces & Chokers', slug: 'necklaces' },
+      { id: 'bangles', name: 'Bangles & Bracelets', slug: 'bangles' },
+    ],
+  },
+  {
+    id: 'bags-footwear',
+    name: 'Bags & Footwear',
+    slug: 'bags-footwear',
+    description: 'Embroidered potlis, chic sling bags, totes, and ethnic juttis.',
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=80',
+    order: 3,
+    is_active: true,
+    subcategories: [
+      { id: 'handbags', name: 'Handbags & Totes', slug: 'handbags' },
+      { id: 'slings', name: 'Sling Bags & Clutches', slug: 'slings' },
+      { id: 'juttis', name: 'Ethnic Juttis & Flats', slug: 'juttis' },
+    ],
+  },
+  {
+    id: 'beauty-wellness',
+    name: 'Beauty & Skincare',
+    slug: 'beauty-wellness',
+    description: 'Gentle skincare, lip tints, kajals, and organic hair care essentials.',
+    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&auto=format&fit=crop&q=80',
+    order: 4,
+    is_active: true,
+    subcategories: [
+      { id: 'skincare', name: 'Skincare', slug: 'skincare' },
+      { id: 'makeup', name: 'Makeup Essentials', slug: 'makeup' },
+    ],
+  },
+  {
+    id: 'home-decor',
+    name: 'Home & Kitchen',
+    slug: 'home-decor',
+    description: 'Aesthetic room decor, bedsheets, organizers, and modern kitchen finds.',
+    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=600&auto=format&fit=crop&q=80',
+    order: 5,
+    is_active: true,
+    subcategories: [
+      { id: 'decor', name: 'Decor & Accents', slug: 'decor' },
+      { id: 'cushions', name: 'Cushions & Throws', slug: 'cushions' },
+    ],
+  },
+  {
+    id: 'trending-deals',
+    name: 'Trending Deals',
+    slug: 'trending-deals',
+    description: 'Viral social media finds and massive discounts curated every single day.',
+    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&auto=format&fit=crop&q=80',
+    order: 6,
+    is_active: true,
+    subcategories: [
+      { id: 'top-deals', name: 'Top Deals', slug: 'top-deals' },
+      { id: 'hot-deals', name: 'Flash Deals', slug: 'hot-deals' },
+    ],
+  },
+];
+
+export const INITIAL_BANNERS: Banner[] = [
+  {
+    id: 'banner-1',
+    title: "Discover Kurtis You'll Fall In Love With",
+    subtitle: 'From pure Lucknowi Chikankari to festive Anarkalis — Handpicked bestsellers at direct partner prices.',
+    badge: '★ Best of Women’s Fashion 2026',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1400&auto=format&fit=crop&q=80',
+    cta_text: 'Explore Trending Kurtis',
+    cta_url: '/category/womens-fashion?sub=kurtis',
+    active: true,
+    priority: 1,
+    text_color: 'light',
+  },
+  {
+    id: 'banner-2',
+    title: 'Steal Deals & Direct Partner Offers',
+    subtitle: 'Curated verified deals from Meesho, Amazon & Flipkart with massive savings and live discounts.',
+    badge: '⚡ Special Flash Savings',
+    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1400&auto=format&fit=crop&q=80',
+    cta_text: 'Shop Top Deals',
+    cta_url: '/deals',
+    active: true,
+    priority: 2,
+    text_color: 'light',
+  },
+  {
+    id: 'banner-3',
+    title: 'Instagram & Pinterest Viral Ethnic Looks',
+    subtitle: 'As seen on @meeshodeals825 — direct partner store links to copy the exact aesthetic effortlessly.',
+    badge: '❤️ Social Media Favourites',
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1400&auto=format&fit=crop&q=80',
+    cta_text: 'See Viral Styles',
+    cta_url: '/trending',
+    active: true,
+    priority: 3,
+    text_color: 'light',
+  },
+];
+
+// Completely empty by default: User will add their own real products manually through Admin Panel
+export const INITIAL_PRODUCTS: Product[] = [];
