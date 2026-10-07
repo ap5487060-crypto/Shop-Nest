@@ -128,5 +128,5 @@ export const INITIAL_BANNERS: Banner[] = [
   },
 ];
 
-// Completely empty by default: User will add their own real products manually through Admin Panel
+// Completely empty: Only real products added by admin will exist
 export const INITIAL_PRODUCTS: Product[] = [];

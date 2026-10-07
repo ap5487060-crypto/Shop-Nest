@@ -1,4 +1,5 @@
 import React from 'react';
+import { useStore } from '../../context/StoreContext';
 
 interface ShopNestLogoProps {
   className?: string;
@@ -13,6 +14,14 @@ export const ShopNestLogo: React.FC<ShopNestLogoProps> = ({
   showTagline = false,
   variant = 'full',
 }) => {
+  let contextLogo = '';
+  try {
+    const store = useStore();
+    contextLogo = store?.customLogoUrl || '';
+  } catch {
+    // If rendered outside StoreProvider
+  }
+
   const [customLogo, setCustomLogo] = React.useState<string | null>(() => {
     return typeof window !== 'undefined' ? localStorage.getItem('shopnest_custom_logo') : null;
   });
@@ -29,23 +38,7 @@ export const ShopNestLogo: React.FC<ShopNestLogoProps> = ({
     };
   }, []);
 
-  if (customLogo) {
-    const heightMap = {
-      sm: 'h-8 max-w-[140px]',
-      md: 'h-10 max-w-[180px]',
-      lg: 'h-14 max-w-[240px]',
-      xl: 'h-20 max-w-[320px]',
-    };
-    return (
-      <div className={`inline-flex items-center ${className}`}>
-        <img
-          src={customLogo}
-          alt="ShopNest"
-          className={`${heightMap[size]} object-contain`}
-        />
-      </div>
-    );
-  }
+  const activeLogo = contextLogo || customLogo;
 
   const sizeMap = {
     sm: { emblem: 'w-8 h-8', text: 'text-lg', cart: 'w-4 h-4', sub: 'text-[9px]' },
@@ -55,6 +48,56 @@ export const ShopNestLogo: React.FC<ShopNestLogoProps> = ({
   };
 
   const currentSize = sizeMap[size];
+
+  if (activeLogo) {
+    if (variant === 'emblem') {
+      return (
+        <div className={`inline-flex items-center ${className}`}>
+          <img
+            src={activeLogo}
+            alt="ShopNest"
+            className={`${currentSize.emblem} rounded-full object-cover shadow-xs border-2 border-pink-300 flex-shrink-0`}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+        <img
+          src={activeLogo}
+          alt="ShopNest DP"
+          className={`${currentSize.emblem} rounded-full object-cover shadow-xs border-2 border-pink-300 flex-shrink-0 group-hover:scale-105 transition-transform`}
+        />
+        <div className="flex flex-col justify-center leading-none">
+          <div className={`font-extrabold tracking-tight ${currentSize.text} flex items-center`}>
+            <span className="text-slate-900 font-extrabold tracking-tight">Shop</span>
+            <span className="text-pink-600 font-extrabold tracking-tight drop-shadow-sm ml-0.5 relative">
+              Nest
+              <span className="absolute -top-1 -right-2 text-[10px] text-pink-500 animate-pulse">✦</span>
+            </span>
+          </div>
+          
+          {/* Cute Speed Cart Baseline */}
+          <div className="flex items-center gap-1.5 mt-0.5 text-pink-500">
+            <div className="w-4 h-[1.5px] bg-pink-400 rounded-full" />
+            <svg className={currentSize.cart} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="21" r="1.5" />
+              <circle cx="19" cy="21" r="1.5" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.1" />
+            </svg>
+            <div className="w-4 h-[1.5px] bg-pink-400 rounded-full" />
+          </div>
+
+          {showTagline && (
+            <span className={`text-slate-500 font-medium tracking-wide mt-1 uppercase ${currentSize.sub}`}>
+              Discover Fashion You'll Love
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Vector emblem inspired by the uploaded ShopNest brand design
   const emblemSvg = (

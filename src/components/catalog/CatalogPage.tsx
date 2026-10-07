@@ -21,6 +21,7 @@ interface CatalogPageProps {
 
 export const CatalogPage: React.FC<CatalogPageProps> = ({ onOpenProductDetail }) => {
   const { 
+    products,
     filteredProducts, 
     categories, 
     filters, 
@@ -398,16 +399,31 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ onOpenProductDetail })
               <div className="w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center text-pink-500 mb-4">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">No Products Matched Your Filters</h3>
+              <h3 className="text-lg font-bold text-slate-800">
+                {products.length === 0 ? 'Catalog Updating in Real-Time' : 'No Products Matched Your Filters'}
+              </h3>
               <p className="text-xs text-slate-500 max-w-sm mt-1 mb-6">
-                Try searching with different keywords like "kurti", "anarkali", or selecting All Categories.
+                {products.length === 0
+                  ? 'Real products from our verified Meesho & partner store are synchronizing. Store owner can add products from the Owner Portal.'
+                  : 'Try searching with different keywords like "kurti", "anarkali", or selecting All Categories.'}
               </p>
-              <button
-                onClick={resetFilters}
-                className="bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-xs transition-colors"
-              >
-                Reset All Filters
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {products.length === 0 ? (
+                  <a
+                    href="#admin"
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-xs transition-colors"
+                  >
+                    Open Owner / Admin Portal
+                  </a>
+                ) : (
+                  <button
+                    onClick={resetFilters}
+                    className="bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-xs transition-colors"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>

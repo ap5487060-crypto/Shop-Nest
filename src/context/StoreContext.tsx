@@ -12,7 +12,7 @@ import {
 } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_BANNERS } from '../data/seedData';
 import { db, firebaseConfig } from '../lib/firebase';
-import { collection, addDoc, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
 interface StoreContextType {
   products: Product[];
@@ -128,21 +128,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Products state with local storage fallback
+  // Products state: Completely clean & empty until real products are added to database
   const [products, setProducts] = useState<Product[]>(() => {
     const deletedIds = getDeletedProductIds();
     const saved = localStorage.getItem('shopnest_products');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Keep only custom products added by the user themselves and not in deleted blacklist
-          const userOnly = parsed.filter(
-            (p: any) =>
-              !deletedIds.includes(p.id) &&
-              (p.is_user_added || (p.id.startsWith('sn-prod-') && p.id.length > 15))
-          );
-          return userOnly;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const valid = parsed.filter((p: any) => !deletedIds.includes(p.id));
+          return valid;
         }
       } catch { /* ignore */ }
     }
@@ -217,6 +212,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('shopnest_logo_changed'));
     }
+
+    // Persist custom logo in Firestore settings so all devices and Vercel users see it
+    try {
+      setDoc(
+        doc(db, 'settings', 'store_config'),
+        { custom_logo_url: url, updated_at: new Date().toISOString() },
+        { merge: true }
+      ).catch((err) => console.warn('Firestore store_config write notice:', err));
+    } catch { /* ignore */ }
   };
 
   const [filters, setFilters] = useState<FilterOptions>(DEFAULT_FILTERS);
@@ -255,30 +259,98 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('shopnest_contact_messages', JSON.stringify(contactMessages));
   }, [contactMessages]);
 
-  // Attempt background sync with Firestore if collections exist
+  // Real-time synchronization with Firestore for Products, Logo/DP, Categories, and Banners
   useEffect(() => {
     let isMounted = true;
-    const fetchFirestoreData = async () => {
-      try {
-        const prodSnap = await getDocs(collection(db, 'products'));
-        if (!prodSnap.empty && isMounted) {
-          const deletedIds = getDeletedProductIds();
-          const remoteProducts: Product[] = [];
-          prodSnap.forEach((doc) => remoteProducts.push({ id: doc.id, ...(doc.data() as Omit<Product, 'id'>) }));
-          // Filter out any products that were deleted by admin
-          const validRemote = remoteProducts.filter((p) => !deletedIds.includes(p.id));
-          if (validRemote.length > 0) {
-            setProducts(validRemote);
-          }
-          setFirestoreSyncStatus('synced');
-        }
-      } catch {
-        // If Firestore is empty or rules haven't been published in console yet, keep local state smoothly
+
+    // 1. Real-time Products Sync
+    const unsubProducts = onSnapshot(
+      collection(db, 'products'),
+      (prodSnap) => {
+        if (!isMounted) return;
+        const deletedIds = getDeletedProductIds();
+        const remoteProducts: Product[] = [];
+        prodSnap.forEach((d) => {
+          remoteProducts.push({ id: d.id, ...(d.data() as Omit<Product, 'id'>) });
+        });
+        const validRemote = remoteProducts.filter((p) => !deletedIds.includes(p.id));
+        setProducts(validRemote);
+        setFirestoreSyncStatus('synced');
+      },
+      (err) => {
+        console.warn('Firestore products onSnapshot warning:', err);
         if (isMounted) setFirestoreSyncStatus('local_cache');
       }
+    );
+
+    // 2. Real-time Store Config & DP/Logo Sync
+    const unsubConfig = onSnapshot(
+      doc(db, 'settings', 'store_config'),
+      (configSnap) => {
+        if (!isMounted) return;
+        if (configSnap.exists()) {
+          const data = configSnap.data();
+          if (data?.custom_logo_url) {
+            setCustomLogoUrl(data.custom_logo_url);
+            localStorage.setItem('shopnest_custom_logo', data.custom_logo_url);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('shopnest_logo_changed'));
+            }
+          }
+        } else {
+          // If Firestore settings document is not created yet, but local device has saved logo, sync to Firestore!
+          const localLogo = localStorage.getItem('shopnest_custom_logo');
+          if (localLogo) {
+            setDoc(
+              doc(db, 'settings', 'store_config'),
+              { custom_logo_url: localLogo, updated_at: new Date().toISOString() },
+              { merge: true }
+            ).catch(() => {});
+          }
+        }
+      },
+      (err) => {
+        console.warn('Firestore store_config onSnapshot notice:', err);
+      }
+    );
+
+    // 3. Real-time Categories Sync
+    const unsubCategories = onSnapshot(
+      collection(db, 'categories'),
+      (catSnap) => {
+        if (!isMounted) return;
+        if (!catSnap.empty) {
+          const remoteCats: Category[] = [];
+          catSnap.forEach((d) => remoteCats.push({ id: d.id, ...(d.data() as Omit<Category, 'id'>) }));
+          remoteCats.sort((a, b) => (a.order || 0) - (b.order || 0));
+          setCategories(remoteCats);
+        }
+      },
+      (err) => console.warn('Firestore categories sync notice:', err)
+    );
+
+    // 4. Real-time Banners Sync
+    const unsubBanners = onSnapshot(
+      collection(db, 'banners'),
+      (bannerSnap) => {
+        if (!isMounted) return;
+        if (!bannerSnap.empty) {
+          const remoteBanners: Banner[] = [];
+          bannerSnap.forEach((d) => remoteBanners.push({ id: d.id, ...(d.data() as Omit<Banner, 'id'>) }));
+          remoteBanners.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+          setBanners(remoteBanners);
+        }
+      },
+      (err) => console.warn('Firestore banners sync notice:', err)
+    );
+
+    return () => {
+      isMounted = false;
+      unsubProducts();
+      unsubConfig();
+      unsubCategories();
+      unsubBanners();
     };
-    fetchFirestoreData();
-    return () => { isMounted = false; };
   }, []);
 
   // Filter and Search logic

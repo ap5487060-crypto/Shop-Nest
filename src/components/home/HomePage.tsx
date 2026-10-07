@@ -80,6 +80,12 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
             <div className="pt-2 flex flex-wrap justify-center gap-3">
               <a
+                href="#admin"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all"
+              >
+                <span>Open Admin Portal to Add Products</span>
+              </a>
+              <a
                 href="https://in.pinterest.com/shopnest825/"
                 target="_blank"
                 rel="noopener noreferrer"

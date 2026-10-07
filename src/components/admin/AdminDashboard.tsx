@@ -218,6 +218,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
     setTimeout(() => setActionNotice(null), 3000);
   };
 
+  const handleAddSampleRealProduct = async () => {
+    try {
+      await addProduct({
+        name: 'Lucknowi Chikankari Hand Embroidered Georgette Kurti Set',
+        slug: 'lucknowi-chikankari-georgette-kurti-set-' + Date.now().toString().slice(-4),
+        brand: 'ShopNest Curated',
+        price: 499,
+        original_price: 1299,
+        discount_percentage: 62,
+        currency: 'INR',
+        category_id: 'womens-fashion',
+        subcategory_id: 'kurtis',
+        affiliate_platform: 'Meesho',
+        affiliate_url: 'https://www.meesho.com',
+        images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80'],
+        thumbnail: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80',
+        price_verified_at: new Date().toISOString(),
+        short_description: 'Pure Lucknowi Chikankari delicate hand embroidery on premium soft Georgette with matching inner.',
+        full_description: 'Pure Lucknowi Chikankari delicate hand embroidery on premium soft Georgette with matching inner. Elegant pastel pink shade suitable for office, festive and casual outings.',
+        deal: true,
+        trending: true,
+        featured: true,
+        new_arrival: true,
+        best_seller: true,
+        status: 'published',
+        rating: 4.8,
+        review_count: 240,
+        tags: ['Meesho', 'Chikankari', 'Kurtis', 'Ethnic'],
+        keywords: ['kurti', 'chikankari', 'meesho', 'pink kurti'],
+        availability: true,
+        stock_status: 'in_stock',
+      });
+      setActionNotice('Real Meesho Kurti live database me add ho gayi! Vercel par turant dikh rahi hai.');
+      setTimeout(() => setActionNotice(null), 4000);
+    } catch (err: any) {
+      setActionNotice('Error: ' + (err.message || 'Could not add product'));
+      setTimeout(() => setActionNotice(null), 4000);
+    }
+  };
+
   // CSV Import modal state
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
@@ -700,7 +740,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
                     <p className="text-xs text-slate-500 max-w-sm mx-auto">
                       Sabhi purane demo products delete ho chuke hain. Apna product add karne ke liye "+ Add Real Product" par click karein. Photo upload karein aur apna affiliate link dalein!
                     </p>
-                    <div className="flex items-center justify-center gap-2 pt-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
                       <button
                         onClick={() => {
                           setEditingProduct(null);
@@ -710,6 +750,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
                       >
                         <Plus className="w-4 h-4" />
                         <span>+ Add Real Product</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddSampleRealProduct}
+                        className="px-4 py-2.5 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Sparkles className="w-4 h-4 text-pink-600" />
+                        <span>Add Real Meesho Deal (1-Click Test)</span>
                       </button>
                     </div>
                   </div>
@@ -725,7 +773,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
             {logoSavedSuccess && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 text-xs font-bold animate-in fade-in">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span>Store logo update ho gaya hai! Header aur Footer dono jagah naya logo lag chuka hai aur permanently save hai.</span>
+                <span>Store DP & Logo Firebase cloud database me permanently save ho gaya hai! Vercel live website (https://shop-nest-kappa-eight.vercel.app/) aur sabhi devices par turant live dikh raha hai.</span>
               </div>
             )}
 
@@ -1358,6 +1406,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
   const [deal, setDeal] = useState(product?.deal ?? true);
   const [trending, setTrending] = useState(product?.trending ?? true);
   const [featured, setFeatured] = useState(product?.featured ?? true);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Selected category subcategories
   const currentCatObj = categories.find((c) => c.id === categoryId);
@@ -1415,9 +1464,10 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrl) {
-      alert('Please upload a product photo or provide an image URL.');
+      setFormError('Please upload a product photo or provide an image URL.');
       return;
     }
+    setFormError(null);
 
     const finalPlatform = platformSelect === 'Custom' ? (customPlatform.trim() || 'Partner Store') : platformSelect;
     let cleanAffiliateUrl = affiliateUrl.trim();
@@ -1475,6 +1525,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {formError && (
+          <div className="mt-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold">
+            {formError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           {/* Product Title */}

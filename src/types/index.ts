@@ -58,7 +58,7 @@ export interface Product {
   image_alt_text?: string;
   specifications?: Record<string, string>;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface Subcategory {
