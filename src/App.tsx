@@ -18,6 +18,8 @@ import { AuthModal } from './components/account/AuthModal';
 import { CartDrawer } from './components/cart/CartDrawer';
 import { PwaInstallPrompt } from './components/common/PwaInstallPrompt';
 import { Product } from './types';
+import { db } from './lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 function ShopNestApp() {
   const { products, setFilters } = useStore();
@@ -27,7 +29,7 @@ function ShopNestApp() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
 
-  // Deep linking for shared product URLs (e.g. #prod-sn-prod-01) and admin #admin or ?admin=true
+  // Deep linking for shared product URLs (?product=... or #prod-sn-prod-01) and admin #admin
   useEffect(() => {
     const handleLocation = () => {
       const hash = window.location.hash;
@@ -36,17 +38,38 @@ function ShopNestApp() {
         setCurrentView('admin');
         return;
       }
-      if (hash && hash.startsWith('#prod-')) {
-        const prodId = hash.replace('#prod-', '');
-        const found = products.find((p) => p.id === prodId);
-        if (found) {
-          setSelectedProduct(found);
+
+      const prodIdFromQuery = urlParams.get('product') || urlParams.get('prod');
+      const prodIdFromHash = hash && hash.startsWith('#prod-') ? hash.replace('#prod-', '') : null;
+      const targetProdId = prodIdFromQuery || prodIdFromHash;
+
+      if (targetProdId) {
+        if (products.length > 0) {
+          const found = products.find((p) => p.id === targetProdId || p.slug === targetProdId);
+          if (found) {
+            setSelectedProduct(found);
+            return;
+          }
         }
+        // If not in state yet (cold load from WhatsApp share), fetch directly from Firestore
+        getDoc(doc(db, 'products', targetProdId))
+          .then((snap) => {
+            if (snap.exists()) {
+              setSelectedProduct({ id: snap.id, ...(snap.data() as Omit<Product, 'id'>) });
+            }
+          })
+          .catch((err) => {
+            console.warn('Error fetching deep-linked product:', err);
+          });
       }
     };
     handleLocation();
     window.addEventListener('hashchange', handleLocation);
-    return () => window.removeEventListener('hashchange', handleLocation);
+    window.addEventListener('popstate', handleLocation);
+    return () => {
+      window.removeEventListener('hashchange', handleLocation);
+      window.removeEventListener('popstate', handleLocation);
+    };
   }, [products]);
 
   // Handle navigation
@@ -167,8 +190,10 @@ function ShopNestApp() {
         product={selectedProduct}
         onClose={() => {
           setSelectedProduct(null);
-          if (window.location.hash.startsWith('#prod-')) {
-            history.replaceState(null, '', ' ');
+          if (typeof window !== 'undefined') {
+            if (window.location.hash.startsWith('#prod-') || window.location.search.includes('product=') || window.location.search.includes('prod=')) {
+              window.history.replaceState(null, '', window.location.pathname);
+            }
           }
         }}
         onSelectProduct={(p) => setSelectedProduct(p)}

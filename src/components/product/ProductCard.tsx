@@ -12,6 +12,7 @@ import {
 import { Product, AffiliatePlatform } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import confetti from 'canvas-confetti';
+import { shareProductToWhatsApp } from '../../lib/shareUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -63,42 +64,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
     addToCart(product, 1);
   };
 
-  const handleWhatsAppShare = (e: React.MouseEvent) => {
+  const handleWhatsAppShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shopnest.vercel.app';
-    const shareUrl = `${origin}/#prod-${product.id}`;
-
-    // Clean message with isolated deal link on its own line for WhatsApp OpenGraph preview card unfurling
-    const text = `🌸 *${product.name}*\n🏷️ *Store:* ${product.affiliate_platform}\n✨ *Handpicked Fashion Deal on ShopNest*\n\n👉 *View Deal & Buy Now:*\n${shareUrl}`;
-
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-
-    // Open synchronously inside the click handler to guarantee popup blockers NEVER block it
-    const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
-    if (!win) {
-      // Direct anchor click fallback for mobile WebViews & sandboxes
-      const link = document.createElement('a');
-      link.href = waUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    await shareProductToWhatsApp(product);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shopnest.vercel.app';
-    const shareUrl = `${origin}/#prod-${product.id}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shop-nest-kappa-eight.vercel.app';
+    const productPageUrl = `${origin}/?product=${product.id}`;
+    const directBuyUrl = product.affiliate_url || productPageUrl;
+    const photoUrl = product.thumbnail || (product.images && product.images[0]) || '';
 
-    // Web Share API (native sheet on Android, iOS, and macOS)
+    const photoLine = photoUrl && !photoUrl.startsWith('data:') ? `\n📸 *Photo:*\n${photoUrl}\n` : '';
+    const text = `🌸 *${product.name}* on ShopNest (${product.affiliate_platform})${photoLine}\n👉 Buy Now: ${directBuyUrl}\n🔗 Product Page: ${productPageUrl}`;
+
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: `ShopNest: ${product.name}`,
-          text: `🌸 Check out ${product.name} on ShopNest (${product.affiliate_platform})!`,
-          url: shareUrl,
+          text,
+          url: productPageUrl,
         });
         return;
       } catch (err: any) {
@@ -108,7 +94,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
 
     // Fallback: Copy to clipboard
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(productPageUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

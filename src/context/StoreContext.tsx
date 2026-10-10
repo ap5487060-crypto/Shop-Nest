@@ -197,9 +197,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (import.meta.env.VITE_COMMERCE_MODE as CommerceMode) || 'affiliate';
   });
 
-  // Custom Store Logo (uploaded by admin/owner)
+  // Custom Store Logo (uploaded by admin/owner, permanent default: /shopnest-logo.jpg)
   const [customLogoUrl, setCustomLogoUrl] = useState<string>(() => {
-    return localStorage.getItem('shopnest_custom_logo') || '';
+    return localStorage.getItem('shopnest_custom_logo') || '/shopnest-logo.jpg';
   });
 
   const updateCustomLogo = (url: string) => {
@@ -562,12 +562,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setProducts((prev) => [newProduct, ...prev]);
 
-    // Firestore sync attempt
-    try {
-      await setDoc(doc(db, 'products', newId), newProduct);
-    } catch {
-      // Keep local
-    }
+    // Immediate Firestore sync in background
+    setDoc(doc(db, 'products', newId), newProduct)
+      .then(() => setFirestoreSyncStatus('synced'))
+      .catch((err) => console.warn('Firestore setDoc notice:', err));
+
     return newId;
   };
 
@@ -577,11 +576,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       prev.map((p) => (p.id === id ? { ...p, ...updates, updated_at: now } : p))
     );
 
-    try {
-      await setDoc(doc(db, 'products', id), { ...updates, updated_at: now }, { merge: true });
-    } catch {
-      // Keep local
-    }
+    setDoc(doc(db, 'products', id), { ...updates, updated_at: now }, { merge: true })
+      .then(() => setFirestoreSyncStatus('synced'))
+      .catch((err) => console.warn('Firestore update notice:', err));
   };
 
   const deleteProduct = async (id: string) => {
@@ -614,11 +611,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch { /* ignore */ }
 
     // 5. Delete from Firestore
-    try {
-      await deleteDoc(doc(db, 'products', id));
-    } catch (err) {
-      console.warn('Firestore product delete notice:', err);
-    }
+    deleteDoc(doc(db, 'products', id))
+      .then(() => setFirestoreSyncStatus('synced'))
+      .catch((err) => console.warn('Firestore delete notice:', err));
   };
 
   const duplicateProduct = async (id: string) => {

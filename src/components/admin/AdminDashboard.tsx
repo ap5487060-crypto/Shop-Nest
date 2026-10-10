@@ -1313,13 +1313,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToStore })
             setEditingProduct(null);
           }}
           onSave={async (prodData) => {
-            if (editingProduct) {
-              await updateProduct(editingProduct.id, prodData);
-            } else {
-              await addProduct(prodData);
-            }
             setProductModalOpen(false);
             setEditingProduct(null);
+            if (editingProduct) {
+              await updateProduct(editingProduct.id, prodData);
+              setActionNotice('Product update ho gaya! Sabhi devices par live update ho gaya.');
+            } else {
+              await addProduct(prodData);
+              setActionNotice('Naya product live ho gaya! Sabhi devices par dikh raha hai.');
+            }
+            setTimeout(() => setActionNotice(null), 4000);
           }}
         />
       )}
@@ -1395,6 +1398,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
   const [customPlatform, setCustomPlatform] = useState<string>(!isPresetPlatform ? defaultPlatform : '');
 
   const [affiliateUrl, setAffiliateUrl] = useState(product?.affiliate_url || '');
+  const [price, setPrice] = useState(product?.price ? String(product.price) : '');
+  const [originalPrice, setOriginalPrice] = useState(product?.original_price ? String(product.original_price) : '');
 
   // Image upload vs URL mode
   const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload');
@@ -1407,6 +1412,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
   const [trending, setTrending] = useState(product?.trending ?? true);
   const [featured, setFeatured] = useState(product?.featured ?? true);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Selected category subcategories
   const currentCatObj = categories.find((c) => c.id === categoryId);
@@ -1468,6 +1474,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
       return;
     }
     setFormError(null);
+    setIsSaving(true);
 
     const finalPlatform = platformSelect === 'Custom' ? (customPlatform.trim() || 'Partner Store') : platformSelect;
     let cleanAffiliateUrl = affiliateUrl.trim();
@@ -1476,14 +1483,20 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
     }
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const numPrice = price ? parseFloat(price) : 0;
+    const numOrig = originalPrice ? parseFloat(originalPrice) : 0;
+    let discountPct = 0;
+    if (numPrice > 0 && numOrig > numPrice) {
+      discountPct = Math.round(((numOrig - numPrice) / numOrig) * 100);
+    }
 
-    await onSave({
+    const payload = {
       name,
       slug: slug || `prod-${Date.now()}`,
-      brand: brand || 'ShopNest',
-      price: 0,
-      original_price: 0,
-      discount_percentage: 0,
+      brand: brand || 'ShopNest Curated',
+      price: numPrice || 0,
+      original_price: numOrig || 0,
+      discount_percentage: discountPct,
       currency: 'INR',
       category_id: categoryId,
       subcategory_id: subcategoryId,
@@ -1506,7 +1519,18 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
       keywords: [name.toLowerCase(), finalPlatform.toLowerCase()],
       availability: true,
       stock_status: 'in_stock',
-    });
+    };
+
+    // Close modal IMMEDIATELY so user never gets stuck or has to click cancel/cut!
+    onClose();
+
+    try {
+      await onSave(payload);
+    } catch (err: any) {
+      console.warn('Save notice:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -1548,12 +1572,32 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
             />
           </div>
 
-          {/* Live Partner Deal Notice (No Price Required) */}
-          <div className="p-3 bg-pink-50/70 border border-pink-200/80 rounded-2xl flex items-center gap-2.5 text-xs text-pink-900">
-            <Sparkles className="w-4 h-4 text-pink-600 shrink-0" />
-            <span className="leading-snug">
-              <strong>Price daalne ki koi zaroorat nahi hai:</strong> Customer jab 'Shop Now' dabayega, use direct partner store ({platformSelect === 'Custom' ? 'partner link' : platformSelect}) par live discounted price mil jayega.
-            </span>
+          {/* Optional Price Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Discounted Price ₹ (Optional)
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 299 (leave blank for live price)"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-pink-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Original MRP ₹ (Optional)
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 999 (for % OFF tag)"
+                value={originalPrice}
+                onChange={(e) => setOriginalPrice(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-pink-500"
+              />
+            </div>
           </div>
 
           {/* Category & Subcategory */}
@@ -1773,9 +1817,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white shadow-md shadow-pink-500/20 transition-all"
+              disabled={isSaving}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                isSaving
+                  ? 'bg-pink-400 text-white cursor-wait opacity-80'
+                  : 'bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white shadow-md shadow-pink-500/20'
+              }`}
             >
-              Save & Publish Product
+              {isSaving ? 'Publishing Live...' : (product ? 'Save Changes' : 'Save & Publish Product')}
             </button>
           </div>
         </form>

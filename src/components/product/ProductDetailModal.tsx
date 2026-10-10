@@ -17,6 +17,7 @@ import {
 import { Product } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import confetti from 'canvas-confetti';
+import { shareProductToWhatsApp } from '../../lib/shareUtils';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -80,15 +81,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleShare = async () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shopnest.vercel.app';
-    const shareUrl = `${origin}/#prod-${product.id}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shop-nest-kappa-eight.vercel.app';
+    const productPageUrl = `${origin}/?product=${product.id}`;
+    const directBuyUrl = product.affiliate_url || productPageUrl;
+    const photoUrl = product.thumbnail || images[0] || '';
+
+    const photoLine = photoUrl && !photoUrl.startsWith('data:') ? `\n📸 *Photo:*\n${photoUrl}\n` : '';
+    const text = `🌸 *${product.name}* on ShopNest (${product.affiliate_platform})${photoLine}\n👉 Buy Now: ${directBuyUrl}\n🔗 Product Page: ${productPageUrl}`;
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: `ShopNest: ${product.name}`,
-          text: `🌸 Check out ${product.name} on ShopNest (${product.affiliate_platform})!`,
-          url: shareUrl,
+          text,
+          url: productPageUrl,
         });
         return;
       } catch (err: any) {
@@ -97,7 +103,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
 
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(productPageUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -105,23 +111,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  const handleWhatsAppShare = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shopnest.vercel.app';
-    const shareUrl = `${origin}/#prod-${product.id}`;
-    const text = `🌸 *${product.name}*\n🏷️ *Store:* ${product.affiliate_platform}\n✨ *Handpicked Fashion Deal on ShopNest*\n\n👉 *View Deal & Buy Now:*\n${shareUrl}`;
-
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-
-    const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
-    if (!win) {
-      const link = document.createElement('a');
-      link.href = waUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+  const handleWhatsAppShare = async () => {
+    await shareProductToWhatsApp(product);
   };
 
   const handlePinterestPin = () => {

@@ -12,16 +12,16 @@
   "categories": ["shopping", "lifestyle", "fashion"],
   "icons": [
     {
-      "src": "/pwa-icon.svg",
+      "src": "/shopnest-logo.jpg",
       "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     },
     {
       "src": "/pwa-icon.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }

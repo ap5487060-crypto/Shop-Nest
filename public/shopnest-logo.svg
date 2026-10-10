@@ -10,29 +10,44 @@
       <stop offset="50%" stop-color="#ffe4e6" />
       <stop offset="100%" stop-color="#fce7f3" />
     </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#f43f5e" flood-opacity="0.25" />
+    </filter>
   </defs>
 
-  <circle cx="250" cy="250" r="230" fill="url(#ringGrad)" />
+  <!-- Outer Glowing Gradient Ring -->
+  <circle cx="250" cy="250" r="230" fill="url(#ringGrad)" filter="url(#shadow)" />
+
+  <!-- Inner Soft Pink Circle -->
   <circle cx="250" cy="250" r="215" fill="#ffffff" />
   <circle cx="250" cy="250" r="210" fill="url(#bgGrad)" />
 
+  <!-- Shopping Bags & Motifs Scaled -->
   <g transform="translate(50, 40) scale(4)">
+    <!-- Decorative Heart Left -->
     <path d="M22 28 C22 23 26 20 30 23 C34 20 38 23 38 28 C38 34 30 40 30 40 C30 40 22 34 22 28 Z" fill="#F43F5E" opacity="0.85" />
+    <!-- Decorative Heart Right -->
     <path d="M78 32 C78 28 81 25 84 27 C87 25 90 28 90 32 C90 36 84 41 84 41 C84 41 78 36 78 32 Z" fill="#FB7185" opacity="0.9" />
 
+    <!-- Main Shopping Bag Left -->
     <rect x="22" y="38" width="28" height="34" rx="4" fill="#EC4899" />
     <path d="M29 38 V31 C29 27 43 27 43 31 V38" stroke="white" stroke-width="2.5" stroke-linecap="round" />
     <path d="M30 50 H42 L40 60 H32 Z" fill="white" opacity="0.9" />
 
+    <!-- Main Shopping Bag Right -->
     <rect x="50" y="44" width="26" height="30" rx="3.5" fill="#F43F5E" />
     <path d="M57 44 V37 C57 33 69 33 69 37 V44" stroke="#FFF" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Heart on Right Bag -->
     <path d="M60 55 C60 52 63 50 65 52 C67 50 70 52 70 55 C70 59 65 62 65 62 C65 62 60 59 60 55 Z" fill="white" />
 
+    <!-- Central Stylized Avatar Head -->
     <circle cx="50" cy="30" r="12" fill="#FDE047" opacity="0.25" />
     <path d="M44 26 C44 20 56 20 56 26 C56 31 52 35 50 35 C48 35 44 31 44 26 Z" fill="#BE185D" opacity="0.95" />
 
+    <!-- Golden/Pink Sparkle Accent -->
     <polygon points="76,18 78,23 83,25 78,27 76,32 74,27 69,25 74,23" fill="#FB7185" />
 
+    <!-- Base Speed Line with Mini Cart -->
     <line x1="20" y1="84" x2="38" y2="84" stroke="#DB2777" stroke-width="2" stroke-linecap="round" />
     <line x1="62" y1="84" x2="80" y2="84" stroke="#DB2777" stroke-width="2" stroke-linecap="round" />
     <rect x="42" y="80" width="16" height="8" rx="2" fill="#DB2777" />
